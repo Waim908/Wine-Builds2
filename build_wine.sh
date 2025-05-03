@@ -366,7 +366,7 @@ if [ "$TERMUX_GLIBC" = "true" ]; then
     }
     clear 
 fi
-
+fi
 
 
 

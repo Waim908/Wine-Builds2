@@ -38,7 +38,7 @@ export WINE_BRANCH="${WINE_BRANCH:-staging}"
 # proton_7.0, experimental_7.0, proton_8.0, experimental_8.0, experimental_9.0
 # bleeding-edge
 # Leave empty to use the default branch.
-export PROTON_BRANCH="${PROTON_BRANCH:-proton_10.0}"
+export PROTON_BRANCH="${PROTON_BRANCH:-proton_9.0}"
 
 # Sometimes Wine and Staging versions don't match (for example, 5.15.2).
 # Leave this empty to use Staging version that matches the Wine version.
@@ -53,6 +53,8 @@ export STAGING_ARGS="${STAGING_ARGS:-}"
 
 # Make 64-bit Wine builds with the new WoW64 mode (32-on-64)
 export EXPERIMENTAL_WOW64="${EXPERIMENTAL_WOW64:-false}"
+
+export TERMUX_GLIBC="${TERMUX_GLIBC:-false}"
 
 # Set this to a path to your Wine source code (for example, /home/username/wine-custom-src).
 # This is useful if you already have the Wine source code somewhere on your
@@ -297,6 +299,79 @@ if [ ! -d wine ]; then
 	echo "Make sure that the correct Wine version is specified."
 	exit 1
 fi
+
+if [ "$TERMUX_GLIBC" = "true" ]; then
+    echo "Applying additional patches for Termux Glibc..."
+
+    if [ "$WINE_BRANCH" = "staging" ]; then
+    echo "Applying esync patch"
+    patch -d wine -Np1 < "${scriptdir}"/esync.patch && \
+    echo "Applying address space patch"
+    patch -d wine -Np1 < "${scriptdir}"/protonoverrides.patch && \
+    echo "Add Proton DLL overrides"
+    patch -d wine -Np1 < "${scriptdir}"/termux-wine-fix-staging.patch && \
+    echo "Applying path change patch"
+    if git -C "${BUILD_DIR}/wine" log | grep -q 4e04b2d5282e4ef769176c94b4b38b5fba006a06; then
+    patch -d wine -Np1 < "${scriptdir}"/path-patch-universal.patch
+    else
+    patch -d wine -Np1 < "${scriptdir}"/pathfix.patch
+    fi || {
+        echo "Error: Failed to apply one or more patches."
+        exit 1
+    }
+    clear
+    elif [ "$WINE_BRANCH" = "vanilla" ]; then
+    echo "Applying esync patch"
+    patch -d wine -Np1 < "${scriptdir}"/esync.patch && \
+    echo "Applying address space patch"
+    patch -d wine -Np1 < "${scriptdir}"/protonoverrides.patch && \
+    echo "Add Proton DLL overrides"
+    patch -d wine -Np1 < "${scriptdir}"/termux-wine-fix.patch && \
+    echo "Applying path change patch"
+    if git -C "${BUILD_DIR}/wine" log | grep -q 4e04b2d5282e4ef769176c94b4b38b5fba006a06; then
+    patch -d wine -Np1 < "${scriptdir}"/path-patch-universal.patch
+    else
+    patch -d wine -Np1 < "${scriptdir}"/pathfix.patch
+    fi || {
+        echo "Error: Failed to apply one or more patches."
+        exit 1
+    }
+    clear
+    elif [ "$WINE_BRANCH" = "staging-tkg" ]; then
+    echo "Applying esync patch"
+    patch -d wine -Np1 < "${scriptdir}"/esync.patch && \
+    echo "Applying address space patch"
+    patch -d wine -Np1 < "${scriptdir}"/protonoverrides.patch && \
+    echo "Add Proton DLL overrides"
+    patch -d wine -Np1 < "${scriptdir}"/termux-wine-fix-staging.patch && \
+    echo "Applying path change patch"
+    ## This needs an additional check since this patch will not work on
+    ## Wine 9.4 and lower due to differences in Wine source code.
+    patch -d wine -Np1 < "${scriptdir}"/path-patch-universal.patch || {
+        echo "Error: Failed to apply one or more patches."
+        exit 1
+    }
+    clear 
+    elif [ "$WINE_BRANCH" = "proton" ]; then
+    echo "Applying esync patch"
+    patch -d wine -Np1 < "${scriptdir}"/esync.patch && \
+    echo "Applying address space patch"
+    patch -d wine -Np1 < "${scriptdir}"/termux-wine-fix.patch && \
+    echo "Applying path change patch"
+    ## Proton is based on Wine 9.0 stable release so some of the updates
+    ## for patches are not required.
+    patch -d wine -Np1 < "${scriptdir}"/pathfix.patch || {
+        echo "Error: Failed to apply one or more patches."
+        exit 1
+    }
+    clear 
+fi
+
+
+
+
+
+
 
 cd wine || exit 1
 dlls/winevulkan/make_vulkan

@@ -341,8 +341,6 @@ if [ "$TERMUX_GLIBC" = "true" ]; then
     echo "Applying esync patch"
     patch -d wine -Np1 < "${scriptdir}"/esync.patch && \
     echo "Applying address space patch"
-    patch -d wine -Np1 < "${scriptdir}"/protonoverrides.patch && \
-    echo "Add Proton DLL overrides"
     patch -d wine -Np1 < "${scriptdir}"/termux-wine-fix-staging.patch && \
     echo "Applying path change patch"
     ## This needs an additional check since this patch will not work on

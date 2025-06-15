@@ -208,6 +208,7 @@ if [ -n "${CUSTOM_SRC_PATH}" ]; then
 elif [ "$WINE_BRANCH" = "staging-tkg" ] || [ "$WINE_BRANCH" = "staging-tkg-ntsync" ]; then
 	if [ "$WINE_BRANCH" = "staging-tkg" ] && [ "${EXPERIMENTAL_WOW64}" = "true" ]; then
 		git clone https://github.com/hostei33/wine-tkg wine -b glibc10.10
+		
 	else
 		if [ "$WINE_BRANCH" = "staging-tkg" ]; then
 			git clone https://github.com/Kron4ek/wine-tkg wine
